@@ -43,6 +43,7 @@ jobs:
       working-directory: godwoken-kicker
       run: ./kicker start
     - name: Stop kicker's godwoken-web3 service
+      working-directory: godwoken-kicker
       run: |
         ./kicker -- stop web3
         ./kicker ps
