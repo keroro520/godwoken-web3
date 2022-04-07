@@ -56,7 +56,7 @@ jobs:
         echo "GODWOKEN_JSON_RPC=http://127.0.0.1:8119"                    >> $GITHUB_ENV
         echo "GODWOKEN_WS_RPC_URL=ws://127.0.0.1:8120"                    >> $GITHUB_ENV
     - name: Start godwoken-web3 service
-      run: yarn run start
+      run: yarn run start &
     - run: yarn workspace @godwoken-web3/api-server run test
     - working-directory: godwoken-kicker
       run: ./kicker stop && sudo ./kicker clean
