@@ -6,7 +6,7 @@ import { Knex } from "knex";
 // u256: decimal(80, 0)
 export async function up(knex: Knex): Promise<void> {
   await knex.schema
-    .createTable("blocks", function (table: Knex.TableBuilder) {
+    .createTableIfNotExists("blocks", function (table: Knex.TableBuilder) {
       table.decimal("number", null, 0).primary().notNullable();
       table.binary("hash").notNullable().unique();
       table.binary("parent_hash").notNullable();
@@ -16,7 +16,7 @@ export async function up(knex: Knex): Promise<void> {
       table.integer("size").notNullable();
       table.timestamp("timestamp").notNullable();
     })
-    .createTable("transactions", function (table: Knex.TableBuilder) {
+    .createTableIfNotExists("transactions", function (table: Knex.TableBuilder) {
       table.bigIncrements("id");
       table.binary("hash").notNullable().unique();
       table.binary("eth_tx_hash").notNullable().unique();
@@ -48,7 +48,7 @@ export async function up(knex: Knex): Promise<void> {
         indexName: "block_number_transaction_index_idx",
       });
     })
-    .createTable("logs", function (table: Knex.TableBuilder) {
+    .createTableIfNotExists("logs", function (table: Knex.TableBuilder) {
       table.bigIncrements("id");
       table
         .bigInteger("transaction_id")
