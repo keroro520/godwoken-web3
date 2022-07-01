@@ -1064,15 +1064,19 @@ export class Eth {
           offset
         );
         // #{ gw_tx_hash => eth_tx_hash }
-        const gwTxHashes = Array.from(new Set(logs.map((log)=>log.transaction_hash)));
-        const ethTxHashes= await Promise.all(
-            gwTxHashes.map(async (gwTxHash)=> {
-              return (await this.gwTxHashToEthTxHash(gwTxHash)) || ZERO_TX_HASH;
-            })
+        const gwTxHashes = Array.from(
+          new Set(logs.map((log) => log.transaction_hash))
         );
-        const txHashMap = new Map(gwTxHashes.map((gwTxHash, index)=>[gwTxHash,ethTxHashes[index]]));
-        const apiLogs = logs.map((log)=>{
-          const ethTxHash : Hash= txHashMap.get(log.transaction_hash)!;
+        const ethTxHashes = await Promise.all(
+          gwTxHashes.map(async (gwTxHash) => {
+            return (await this.gwTxHashToEthTxHash(gwTxHash)) || ZERO_TX_HASH;
+          })
+        );
+        const txHashMap = new Map(
+          gwTxHashes.map((gwTxHash, index) => [gwTxHash, ethTxHashes[index]])
+        );
+        const apiLogs = logs.map((log) => {
+          const ethTxHash: Hash = txHashMap.get(log.transaction_hash)!;
           return toApiLog(log, ethTxHash);
         });
         return apiLogs;
@@ -1091,15 +1095,19 @@ export class Eth {
         offset
       );
       // #{ gw_tx_hash => eth_tx_hash }
-      const gwTxHashes = Array.from(new Set(logs.map((log)=>log.transaction_hash)));
-      const ethTxHashes= await Promise.all(
-          gwTxHashes.map(async (gwTxHash)=> {
-            return (await this.gwTxHashToEthTxHash(gwTxHash)) || ZERO_TX_HASH;
-          })
+      const gwTxHashes = Array.from(
+        new Set(logs.map((log) => log.transaction_hash))
       );
-      const txHashMap = new Map(gwTxHashes.map((gwTxHash, index)=>[gwTxHash,ethTxHashes[index]]));
-      const apiLogs = logs.map((log)=>{
-        const ethTxHash : Hash= txHashMap.get(log.transaction_hash)!;
+      const ethTxHashes = await Promise.all(
+        gwTxHashes.map(async (gwTxHash) => {
+          return (await this.gwTxHashToEthTxHash(gwTxHash)) || ZERO_TX_HASH;
+        })
+      );
+      const txHashMap = new Map(
+        gwTxHashes.map((gwTxHash, index) => [gwTxHash, ethTxHashes[index]])
+      );
+      const apiLogs = logs.map((log) => {
+        const ethTxHash: Hash = txHashMap.get(log.transaction_hash)!;
         return toApiLog(log, ethTxHash);
       });
       return apiLogs;

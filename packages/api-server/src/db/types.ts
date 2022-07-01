@@ -103,7 +103,7 @@ export interface DBLog {
 }
 
 export interface DBEthLog extends DBLog {
-  eth_tx_hash: Buffer,
+  eth_tx_hash: Buffer;
 }
 
 export interface Log {
