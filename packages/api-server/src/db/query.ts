@@ -337,6 +337,7 @@ export class Query {
         .modify(buildQueryLogTopics, queryTopics)
       .where("block_number", ">=", fromBlock)
       .where("block_number", "<=", toBlock)
+        // TODO bilibili use `modify`, if `queryLastPollId` is `-1`, then ignore
       .where("id", ">", queryLastPollId.toString(10))
       .orderBy("id", "asc")
       .offset(queryOffset)
