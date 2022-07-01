@@ -22,8 +22,11 @@ import {
   filterLogsByTopics,
   bufferToHex,
   hexToBuffer,
-  getDatabaseRateLimitingConfiguration,
+  getDatabaseRateLimitingConfiguration, buildQueryLogTopics,
 } from "./helpers";
+import {FilterTopic} from "../cache/types";
+import {logger} from "../base/logger";
+const newrelic = require("newrelic");
 
 const poolMax = envConfig.pgPoolMax || 20;
 const GLOBAL_KNEX = Knex({
@@ -296,24 +299,48 @@ export class Query {
     return logs.map((log) => formatLog(log));
   }
 
+  private async queryLogsByBlockRangeWrapNewRelic(
+      fromBlock: HexNumber,
+      toBlock: HexNumber,
+      queryAddresses: HexString[],
+      queryTopics: FilterTopic[],
+      lastPollId?: bigint,
+      offset?: number
+  ): Promise<Log[]> {
+    return await newrelic.startSegment(
+        "queryLogsByBlockRange",
+        false,
+        async () => { return await this.queryLogsByBlockRange(
+            fromBlock,
+            toBlock,
+            queryAddresses,
+            queryTopics,
+            lastPollId,
+            offset,
+        ) }
+    );
+  }
+
   private async queryLogsByBlockRange(
-    fromBlock: HexNumber,
-    toBlock: HexNumber,
-    address?: HexString | HexString[],
-    lastPollId?: bigint,
-    offset?: number
+      fromBlock: HexNumber,
+      toBlock: HexNumber,
+      queryAddresses: HexString[],
+      queryTopics: FilterTopic[],
+      lastPollId?: bigint,
+      offset?: number
   ): Promise<Log[]> {
     const { MAX_QUERY_NUMBER } = getDatabaseRateLimitingConfiguration();
     const queryLastPollId = lastPollId || -1;
     const queryOffset = offset || 0;
     let logs: DBLog[] = await this.knex<DBLog>("logs")
-      .modify(buildQueryLogAddress, address)
+      .modify(buildQueryLogAddress, queryAddresses)
+        .modify(buildQueryLogTopics, queryTopics)
       .where("block_number", ">=", fromBlock)
       .where("block_number", "<=", toBlock)
       .where("id", ">", queryLastPollId.toString(10))
       .orderBy("id", "asc")
       .offset(queryOffset)
-      .limit(MAX_QUERY_NUMBER);
+      .limit(MAX_QUERY_NUMBER + 1);
     return logs.map((log) => formatLog(log));
   }
 
@@ -323,13 +350,23 @@ export class Query {
     toBlock?: bigint,
     offset?: number
   ): Promise<Log[]> {
-    const address = normalizeLogQueryAddress(option.address);
-    const topics = option.topics || [];
+    const queryTopics : FilterTopic[] = option.topics || [];
+    let queryAddresses: HexString[];
+
+    // Convert querying address into universal array
+    const normalizedAddress = normalizeLogQueryAddress(option.address);
+    if (normalizedAddress == null) {
+      queryAddresses = []
+    } else if (typeof normalizedAddress === 'string') {
+      queryAddresses = [normalizedAddress]
+    } else {
+      queryAddresses = normalizedAddress
+    }
 
     if (typeof blockHashOrFromBlock === "string" && toBlock == null) {
       const logs = await this.queryLogsByBlockHash(
         blockHashOrFromBlock,
-        address,
+        queryAddresses,
         undefined,
         offset
       );
@@ -338,14 +375,15 @@ export class Query {
         throw new Error(QUERY_OFFSET_REACHED_END);
       }
 
-      return filterLogsByTopics(logs, topics);
+      return filterLogsByTopics(logs, queryTopics);
     }
 
     if (typeof blockHashOrFromBlock === "bigint" && toBlock != null) {
-      const logs = await this.queryLogsByBlockRange(
+      const logs = await this.queryLogsByBlockRangeWrapNewRelic(
         blockHashOrFromBlock.toString(),
         toBlock.toString(),
-        address,
+        queryAddresses,
+        queryTopics,
         undefined,
         offset
       );
@@ -354,7 +392,8 @@ export class Query {
         throw new Error(QUERY_OFFSET_REACHED_END);
       }
 
-      return filterLogsByTopics(logs, topics);
+      // return filterLogsByTopics(logs, queryTopics);
+      return logs;
     }
 
     throw new Error("invalid params!");
@@ -386,10 +425,23 @@ export class Query {
     }
 
     if (typeof blockHashOrFromBlock === "bigint" && toBlock != null) {
+      let queryAddresses: HexString[];
+
+      // Convert querying address into universal array
+      const normalizedAddress = normalizeLogQueryAddress(option.address);
+      if (normalizedAddress == null) {
+        queryAddresses = []
+      } else if (typeof normalizedAddress === 'string') {
+        queryAddresses = [normalizedAddress]
+      } else {
+        queryAddresses = normalizedAddress
+      }
+
       const logs = await this.queryLogsByBlockRange(
         blockHashOrFromBlock.toString(),
         toBlock.toString(),
-        address,
+        queryAddresses,
+        [], // FIXME @keroro520 is testing
         lastPollId,
         offset
       );

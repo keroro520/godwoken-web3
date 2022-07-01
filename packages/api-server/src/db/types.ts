@@ -102,6 +102,10 @@ export interface DBLog {
   topics: Buffer[];
 }
 
+export interface DBEthLog extends DBLog {
+  eth_tx_hash: Buffer,
+}
+
 export interface Log {
   id: bigint;
   transaction_id: bigint;

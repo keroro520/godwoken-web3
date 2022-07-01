@@ -16,6 +16,7 @@ import {
 import { LimitExceedError } from "../methods/error";
 import { Knex as KnexType } from "knex";
 import { envConfig } from "../base/env-config";
+import {logger} from "../base/logger";
 
 export function toBigIntOpt(
   num: bigint | HexNumber | undefined
@@ -288,4 +289,28 @@ export function buildQueryLogAddress(
       queryAddress.map((addr) => hexToBuffer(addr))
     );
   }
+}
+
+export function buildQueryLogTopics(
+    queryBuilder: KnexType.QueryBuilder,
+    topics: FilterTopic[],
+) {
+  if (topics.length !== 0) {
+    // queryBuilder.where("array_length(topics, 1)", "=", topics.length)
+    queryBuilder.whereRaw(`array_length(topics, 1) >= ${topics.length}`);
+  }
+
+  topics.forEach((topic, index)=> {
+    if (topic == null) {
+      // discard always-matched topic
+    } else if (typeof topic === "string") {
+      const pgTopicIndex = index + 1;
+      const pgTopic = topic.replace("0x", "\\x");
+      queryBuilder.whereRaw(`topics[${pgTopicIndex}] = '${pgTopic}'`)
+    } else {
+      const pgTopicIndex = index + 1;
+      const pgSubtopics = topic.map((subtopic)=>subtopic.replace("0x", "\\x"));
+      queryBuilder.whereIn(`topics[${pgTopicIndex}]`, pgSubtopics)
+    }
+  });
 }

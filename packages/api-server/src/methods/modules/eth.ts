@@ -1063,14 +1063,19 @@ export class Eth {
           undefined,
           offset
         );
-        return await Promise.all(
-          logs.map(async (log) => {
-            const ethTxHash =
-              (await this.gwTxHashToEthTxHash(log.transaction_hash)) ||
-              ZERO_TX_HASH;
-            return toApiLog(log, ethTxHash);
-          })
+        // #{ gw_tx_hash => eth_tx_hash }
+        const gwTxHashes = Array.from(new Set(logs.map((log)=>log.transaction_hash)));
+        const ethTxHashes= await Promise.all(
+            gwTxHashes.map(async (gwTxHash)=> {
+              return (await this.gwTxHashToEthTxHash(gwTxHash)) || ZERO_TX_HASH;
+            })
         );
+        const txHashMap = new Map(gwTxHashes.map((gwTxHash, index)=>[gwTxHash,ethTxHashes[index]]));
+        const apiLogs = logs.map((log)=>{
+          const ethTxHash : Hash= txHashMap.get(log.transaction_hash)!;
+          return toApiLog(log, ethTxHash);
+        });
+        return apiLogs;
       }
 
       const fromBlockNumber: U64 = await this.blockParameterToBlockNumber(
@@ -1085,14 +1090,19 @@ export class Eth {
         toBlockNumber,
         offset
       );
-      return await Promise.all(
-        logs.map(async (log) => {
-          const ethTxHash =
-            (await this.gwTxHashToEthTxHash(log.transaction_hash)) ||
-            ZERO_TX_HASH;
-          return toApiLog(log, ethTxHash);
-        })
+      // #{ gw_tx_hash => eth_tx_hash }
+      const gwTxHashes = Array.from(new Set(logs.map((log)=>log.transaction_hash)));
+      const ethTxHashes= await Promise.all(
+          gwTxHashes.map(async (gwTxHash)=> {
+            return (await this.gwTxHashToEthTxHash(gwTxHash)) || ZERO_TX_HASH;
+          })
       );
+      const txHashMap = new Map(gwTxHashes.map((gwTxHash, index)=>[gwTxHash,ethTxHashes[index]]));
+      const apiLogs = logs.map((log)=>{
+        const ethTxHash : Hash= txHashMap.get(log.transaction_hash)!;
+        return toApiLog(log, ethTxHash);
+      });
+      return apiLogs;
     };
 
     const executeOneQuery = async (offset: number) => {
