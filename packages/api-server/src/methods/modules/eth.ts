@@ -1236,9 +1236,9 @@ export class Eth {
     }
 
     // query from database
-    const transaction = await this.query.getTransactionByHash(gwTxHash);
-    if (transaction != null) {
-      return transaction.eth_tx_hash;
+    const ethTxHashes = await this.query.getTransactionEthHashesByGwTxHash(gwTxHash);
+    if (ethTxHashes.length !== 0) {
+      return ethTxHashes[0];
     }
 
     return null;

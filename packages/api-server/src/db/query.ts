@@ -220,6 +220,14 @@ export class Query {
     });
   }
 
+  async getTransactionEthHashesByGwTxHash(
+      gwTxHash: Hash,
+  ): Promise<Hash[]> {
+    return await this.getTransactionEthHashes({
+      hash: hexToBuffer(gwTxHash)
+    });
+  }
+
   private async getTransactionEthHashes(
     params: Readonly<Partial<KnexType.MaybeRawRecord<DBTransaction>>>
   ): Promise<Hash[]> {
