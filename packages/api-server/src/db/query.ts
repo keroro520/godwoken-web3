@@ -353,11 +353,13 @@ export class Query {
     // - When the number of query results exceeds $MAX_QUERY_NUMBER, an error is returned.
     // - When the queried results are less than or equal to $MAX_QUERY_NUMBER, sorting takes only a short time
     let logs: DBLog[] = await this.knex<DBLog>("logs")
+        .select("logs.*", "transactions.eth_tx_hash")
+        .join("transactions", {"logs.transaction_hash": "transactions.hash"})
       .modify(buildQueryLogAddress, queryAddresses)
       .modify(buildQueryLogTopics, queryTopics)
-      .where("block_number", ">=", fromBlock)
-      .where("block_number", "<=", toBlock)
-      .where("id", ">", queryLastPollId.toString(10))
+      .where("logs.block_number", ">=", fromBlock)
+      .where("logs.block_number", "<=", toBlock)
+      .where("logs.id", ">", queryLastPollId.toString(10))
       .offset(queryOffset)
       .limit(MAX_QUERY_NUMBER + 1);
     return logs

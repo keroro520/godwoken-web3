@@ -93,6 +93,7 @@ export interface DBLog {
   id: string;
   transaction_id: string;
   transaction_hash: Buffer;
+  eth_tx_hash?: Buffer,
   transaction_index: number;
   block_number: string;
   block_hash: Buffer;
@@ -102,14 +103,12 @@ export interface DBLog {
   topics: Buffer[];
 }
 
-export interface DBEthLog extends DBLog {
-  eth_tx_hash: Buffer;
-}
-
 export interface Log {
   id: bigint;
   transaction_id: bigint;
   transaction_hash: Hash;
+  // TODO don't allow undefined
+  eth_tx_hash?: Hash,
   transaction_index: number;
   block_number: bigint;
   block_hash: Hash;

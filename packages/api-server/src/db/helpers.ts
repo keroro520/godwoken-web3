@@ -94,6 +94,7 @@ export function formatTransaction(tx: DBTransaction): Transaction {
 export function formatLog(log: DBLog): Log {
   return {
     ...log,
+    eth_tx_hash: log.eth_tx_hash ? bufferToHex(log.eth_tx_hash) : undefined,
     id: BigInt(log.id),
     transaction_id: BigInt(log.transaction_id),
     transaction_index: +log.transaction_index,
