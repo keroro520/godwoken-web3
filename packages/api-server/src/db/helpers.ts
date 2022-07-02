@@ -305,7 +305,7 @@ export function buildQueryLogTopics(
     } else if (typeof topic === "string") {
       const pgTopicIndex = index + 1;
       const pgTopic = topic.replace("0x", "\\x");
-      queryBuilder.whereRaw(`topics[${pgTopicIndex}] = '${pgTopic}'`);
+      queryBuilder.where(`topics[${pgTopicIndex}]`, "=", pgTopic);
     } else {
       const pgTopicIndex = index + 1;
       const pgSubtopics = topic.map((subtopic) =>
