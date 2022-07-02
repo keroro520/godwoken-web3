@@ -296,7 +296,6 @@ export function buildQueryLogTopics(
   topics: FilterTopic[]
 ) {
   if (topics.length !== 0) {
-    // queryBuilder.where("array_length(topics, 1)", "=", topics.length)
     queryBuilder.whereRaw(`array_length(topics, 1) >= ${topics.length}`);
   }
 
