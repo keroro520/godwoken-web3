@@ -1044,7 +1044,7 @@ export class Eth {
     // remember to update the last poll cache
     // logsData[0] is now the highest log id(meaning it is the newest cache log id)
     if (logs.length !== 0) {
-      await this.filterManager.updateLastPoll(filter_id, logs[0].id);
+      await this.filterManager.updateLastPoll(filter_id, logs[-1].id);
     }
 
     return await Promise.all(
