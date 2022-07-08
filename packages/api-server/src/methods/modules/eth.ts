@@ -1241,6 +1241,57 @@ export class Eth {
 
     return null;
   }
+
+  private async _rpcFilterRequestToGetLogsParams(
+    filter: RpcFilterRequest
+  ): Promise<FilterParams> {
+    if (filter.blockHash != null) {
+      if (filter.fromBlock !== undefined || filter.toBlock !== undefined) {
+        throw new Web3Error(
+          "blockHash is mutually exclusive with fromBlock/toBlock"
+        );
+      }
+
+      const block = await this.query.getBlockByHash(filter.blockHash);
+      if (block == null) {
+        throw new InvalidParamsError("blockHash cannot be found");
+      }
+
+      filter.fromBlock = "0x" + block.number.toString(16);
+      filter.toBlock = "0x" + block.number.toString(16);
+    }
+
+    const [fromBlock, toBlock] = await Promise.all([
+      this._normalizeBlockParameterForFilterRequest(filter.fromBlock),
+      this._normalizeBlockParameterForFilterRequest(filter.toBlock),
+    ]);
+    return {
+      fromBlock,
+      toBlock,
+      topics: filter.topics || [],
+      addresses: universalizeAddress(filter.address),
+      blockHash: filter.blockHash,
+    };
+  }
+
+  private async _normalizeBlockParameterForFilterRequest(
+    blockParameter: undefined | BlockParameter
+  ): Promise<bigint> {
+    const latestBlockNumber = await this.getTipNumber();
+    if (
+      blockParameter == undefined ||
+      blockParameter === "latest" ||
+      blockParameter === "pending"
+    ) {
+      return latestBlockNumber;
+    }
+
+    if (blockParameter === "earliest") {
+      return BigInt(0);
+    }
+
+    return BigInt(blockParameter);
+  }
 }
 
 function ethTxHashCacheKey(ethTxHash: string) {
