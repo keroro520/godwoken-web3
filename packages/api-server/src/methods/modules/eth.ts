@@ -953,17 +953,17 @@ export class Eth {
     //***** handle block-filter
     if (filter === FilterFlag.blockFilter) {
       const lastPollBlockNumber = await this.filterManager.getLastPoll(
-          filter_id
+        filter_id
       );
       const arrayOfHashAndNumber =
-          await this.query.getBlockHashesAndNumbersAfterBlockNumber(
-              lastPollBlockNumber,
-              "asc"
-          );
+        await this.query.getBlockHashesAndNumbersAfterBlockNumber(
+          lastPollBlockNumber,
+          "asc"
+        );
       if (arrayOfHashAndNumber.length !== 0) {
         await this.filterManager.updateLastPoll(
-            filter_id,
-            arrayOfHashAndNumber[arrayOfHashAndNumber.length - 1].number
+          filter_id,
+          arrayOfHashAndNumber[arrayOfHashAndNumber.length - 1].number
         );
       }
       return arrayOfHashAndNumber.map((hn) => hn.hash);
