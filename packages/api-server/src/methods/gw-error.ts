@@ -41,6 +41,7 @@ export interface GwErrorItem {
   type: string;
   message: string;
 }
+// 只定义了 92 SUDT_ERROR_INSUFFICIENT_BALANCE，好像没太大用处？删掉会有什么影响吗？`message` 字段是必须的吗？
 const gwErrorMapping: { [key: string]: { type: string; message: string } } = {
   "92": {
     type: "SUDT_ERROR_INSUFFICIENT_BALANCE",
@@ -152,6 +153,10 @@ export interface GwErrorDetail {
   statusReason?: string;
 }
 
+// Question: `parseGwError` 这个函数混用 return error 和 throw error，不太明白具体的用途是什么？
+//
+// Question: `parseGwError` 和 `parseGwRpcError` 有挺多的重复代码
+//
 export function parseGwError(error: any): GwErrorDetail {
   const prefix = "JSONRPCError: server error ";
   let message: string = error.message;
@@ -174,6 +179,7 @@ export function parseGwError(error: any): GwErrorDetail {
       const newMessage = `${failedReason.status_type.toLowerCase()}: ${
         failedReason.message
       }`;
+      // Question: 为什么直接 throw RpcError 而不是返回 GwErrorDetail
       throw new RpcError(err.code, newMessage, data);
     }
 
